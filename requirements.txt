@@ -1,2 +1,5 @@
-Flask
-python-aternos==3.0.6
+/
+- main.py
+- requirements.txt
+- Dockerfile
+- render.yaml

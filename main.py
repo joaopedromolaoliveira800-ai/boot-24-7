@@ -1,59 +1,68 @@
+python
 import os
 from flask import Flask, render_template_string
+import cloudscraper
+
+SESSION = os.getenv("ATERNOS_SESSION")
+CF = os.getenv("CF_CLEARANCE")
+
+scraper = cloudscraper.create_scraper(
+    browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True},
+    delay=10
+)
+
+if CF:
+    scraper.cookies.set('cf_clearance', CF, domain='.aternos.org')
+    scraper.cookies.set('cf_clearance', CF, domain='aternos.org')
+if SESSION:
+    scraper.cookies.set('ATERNOS_SESSION', SESSION, domain='.aternos.org')
+
+import python_aternos.atserver.atserver as atserver_mod
+import python_aternos.atconnect.atconnect as atconnect_mod
+atserver_mod.REQUESTS = scraper
+atconnect_mod.REQUESTS = scraper
+
 from python_aternos import Client
 
 app = Flask(__name__)
 
-SESSION = os.getenv("ATERNOS_SESSION")
-
 HTML = """
-<!DOCTYPE html>
-<html>
-<head><meta name="viewport" content="width=device-width, initial-scale=1">
+<html><head><meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{background:#0f0f0f;color:#fff;font-family:Arial;text-align:center;padding-top:50px}
 .card{background:#1a1a1a;padding:30px;border-radius:20px;max-width:400px;margin:auto}
 .btn{background:#2cc76a;color:#fff;border:none;padding:18px 40px;font-size:22px;border-radius:12px;cursor:pointer;width:100%}
-.btn:disabled{background:gray}
-.status{font-size:18px;margin:20px 0}
 </style>
-</head>
-<body>
+</head><body>
 <div class="card">
 <h2>🎮 jcodogn.aternos.me:58029</h2>
-<div class="status">Status: <b>{{status}}</b></div>
-<form method="POST" action="/start">
-<button class="btn">{{'ONLINE ✅' if status=='Online' else 'LIGAR SERVIDOR 🚀'}}</button>
-</form>
-</div>
-<script>setTimeout(()=>location.reload(),10000)</script>
-</body>
-</html>
+<div>Status: <b>{{status}}</b></div><br>
+<form method="POST" action="/start"><button class="btn">LIGAR SERVIDOR 🚀</button></form>
+<p style="color:#888;font-size:11px;margin-top:15px">{{msg}}</p>
+</div><script>setTimeout(()=>location.reload(),10000)</script></body></html>
 """
 
-def get_aternos_client():
-    atclient = Client()
-    atclient.login_with_session(SESSION)  # <- AQUI TAVA O ERRO, agora corrigido
-    return atclient
+def get_server():
+    client = Client()
+    client.login_with_session(SESSION)
+    return client.list_servers()[0]
 
 @app.route("/")
 def home():
     try:
-        atclient = get_aternos_client()
-        serv = atclient.list_servers()[0]
-        return render_template_string(HTML, status=serv.status)
+        serv = get_server()
+        return render_template_string(HTML, status=serv.status, msg="Auto-refresh 10s")
     except Exception as e:
-        return f"Erro: {e}"
+        return render_template_string(HTML, status=f"Erro: {e}", msg="Atualize CF_CLEARANCE no Render")
 
 @app.route("/start", methods=["POST"])
 def start():
     try:
-        atclient = get_aternos_client()
-        serv = atclient.list_servers()[0]
+        serv = get_server()
         serv.start()
-        return "Ligando... <a href='/'>Voltar</a>"
+        return "LIGANDO... entra no Mine em 1 min<br><a href='/'>Voltar</a>"
     except Exception as e:
-        return f"Erro ao ligar: {e}"
+        return f"Erro: {e}<br><a href='/'>Voltar</a>"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))

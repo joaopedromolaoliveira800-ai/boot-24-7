@@ -5,11 +5,11 @@ from python_aternos import Client
 app = Flask(__name__)
 
 SESSION = os.getenv("ATERNOS_SESSION")
+
 HTML = """
 <!DOCTYPE html>
 <html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<head><meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body{background:#0f0f0f;color:#fff;font-family:Arial;text-align:center;padding-top:50px}
 .card{background:#1a1a1a;padding:30px;border-radius:20px;max-width:400px;margin:auto}
@@ -23,33 +23,33 @@ body{background:#0f0f0f;color:#fff;font-family:Arial;text-align:center;padding-t
 <h2>🎮 jcodogn.aternos.me:58029</h2>
 <div class="status">Status: <b>{{status}}</b></div>
 <form method="POST" action="/start">
-<button class="btn" {{'disabled' if status=='Online' else ''}}>{{'ONLINE ✅' if status=='Online' else 'LIGAR SERVIDOR 🚀'}}</button>
+<button class="btn">{{'ONLINE ✅' if status=='Online' else 'LIGAR SERVIDOR 🚀'}}</button>
 </form>
-<p style="margin-top:20px;color:#888;font-size:12px">Auto-refresh a cada 10s</p>
 </div>
 <script>setTimeout(()=>location.reload(),10000)</script>
 </body>
 </html>
 """
 
-def get_server():
-    client = Client.from_hashed_session(SESSION)
-    servs = client.list_servers()
-    # pega o primeiro servidor da conta jcodogn
-    return servs[0]
+def get_aternos_client():
+    atclient = Client()
+    atclient.login_with_session(SESSION)  # <- AQUI TAVA O ERRO, agora corrigido
+    return atclient
 
 @app.route("/")
 def home():
     try:
-        serv = get_server()
+        atclient = get_aternos_client()
+        serv = atclient.list_servers()[0]
         return render_template_string(HTML, status=serv.status)
     except Exception as e:
-        return f"Erro: {e} - Verifique ATSESSION"
+        return f"Erro: {e}"
 
 @app.route("/start", methods=["POST"])
 def start():
     try:
-        serv = get_server()
+        atclient = get_aternos_client()
+        serv = atclient.list_servers()[0]
         serv.start()
         return "Ligando... <a href='/'>Voltar</a>"
     except Exception as e:

@@ -1,3 +1,10 @@
-ATERNOS_USER=jcodogn
-ATERNOS_PASS=admin123
-PYTHON_VERSION=3.11.0
+services:
+    - type: web
+    name: jcodogn-panel
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+            - key: ATERNOS_USER
+        sync: false
+            - key: ATERNOS_PASS
+        sync: false

@@ -1,2 +1,2 @@
 Flask
-python-aternos==3.0.6
+python-aternos

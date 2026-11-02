@@ -1,11 +1,6 @@
 services:
     - type: web
-    name: aternos-bot-24h
+    name: aternos-bot-jcodogn
     env: python
-    buildCommand: pip install --upgrade pip wheel setuptools && pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: python main.py
-    envVars:
-            - key: ATERNOS_USER
-        sync: false
-            - key: ATERNOS_PASS
-        sync: false
